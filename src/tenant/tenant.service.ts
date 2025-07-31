@@ -55,4 +55,9 @@ export class TenantService {
         }
         return tenant;
     }
+    async findByEmail(email: string) {
+        const tenant = await this.tenantRepository.findOne({ where: { email } });
+
+        return tenant;
+    }
 }

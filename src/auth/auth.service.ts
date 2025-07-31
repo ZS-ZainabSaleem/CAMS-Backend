@@ -2,33 +2,77 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { UserService } from '../user/user.service';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
+import { TenantService } from '../tenant/tenant.service';
+import { promises } from 'dns';
 
 @Injectable()
 export class AuthService {
-    constructor(private readonly userService: UserService, private readonly jwtService: JwtService) {}
+    constructor(
+        private readonly userService: UserService,
+        private readonly jwtService: JwtService,
+        private readonly tenantService: TenantService
+    ) {}
 
-    async validateUser(email: string, password: string): Promise<any> {
-        const user = await this.userService.findUserByEmail(email);
-        //console.log('User found:', user);
-        if (user) {
-            const isPasswordValid = await bcrypt.compare(password, user.password);
-            //console.log('Password valid:', isPasswordValid);
-            if (!isPasswordValid) {
-                throw new UnauthorizedException('Invalid credentials');
-            }
-
-            return {message: 'Login successful', user};
-        }
-        throw new UnauthorizedException('Invalid credentials');
-
-
+    async validateLogin(email: string, password: string): Promise<any> {
+    // 1. Check if email belongs to a tenant
+        const tenant = await this.tenantService.findByEmail(email);
+        if (tenant) {
+        
+        return { type: 'tenant', tenant };
     }
-    async login(user: any): Promise<any> {
-        console.log('User to login:', user);
-        const payload = { email: user.email, sub: user.id};
-        return {
-            access_token: this.jwtService.sign(payload),
-            user,
+
+    // 2. Else, check if email belongs to a user
+        const user = await this.userService.findUserByEmail(email);
+        console.log('User found:', user);
+        if (!user) throw new UnauthorizedException('Invalid credentials');
+
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+        if (!isPasswordValid) throw new UnauthorizedException('Invalid user credentials');
+
+        return { type: 'user', user };
+    }
+
+    async login(result: any) {
+    // If TENANT login
+    if (result.type === 'tenant') {
+        const tenant = result.tenant;
+
+        // Ensure users are loaded
+        const tenantWithUsers = await this.tenantService.findTenantWithUsers(tenant.id);
+
+        const payload = {
+        email: tenant.email,
+        sub: tenant.id,
         };
+
+        return {
+        access_token: this.jwtService.sign(payload),
+        data: {
+            tenantId: tenantWithUsers.id,
+            tenantName: tenantWithUsers.name,
+            users: tenantWithUsers.users.map((user) => ({
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            })),
+        },
+        };
+    }
+
+    // If USER login
+    const user = result.user;
+
+    const payload = {
+        email: user.email,
+        sub: user.id,
+    };
+
+    return {
+        access_token: this.jwtService.sign(payload),
+        data: {
+        id: user.id,
+        name: user.name,
+        },
+    };
     }
 }
