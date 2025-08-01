@@ -12,10 +12,16 @@ export class TenantEntity {
 
     @Column()
     email: string;  
-    
+
     @Column()
     password: string;
     
+    @Column({ default: 'tenant' }) 
+    role: string;
+
+    @Column() 
+    logo: string;
+
     @OneToMany(() => userEntity, user => user.tenant)
     users: userEntity[];
 }

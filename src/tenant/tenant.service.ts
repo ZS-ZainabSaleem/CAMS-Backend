@@ -1,19 +1,26 @@
-import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { CreateTenantDto } from './DTO/tenant.dto';
 import { TenantEntity } from './Entities/tenant.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { NotFoundError } from 'rxjs';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class TenantService {
     constructor(@InjectRepository(TenantEntity) private tenantRepository: Repository<TenantEntity>) {}
     async create(createTenantDto: CreateTenantDto) {
-        const tenant = this.tenantRepository.save(createTenantDto);
-        if(!tenant) {
-            throw new InternalServerErrorException('Tenant creation failed');
+        // Check if tenant with the same email already exists
+        const existingTenant = await this.tenantRepository.findOne({ where: { email: createTenantDto.email } });
+        if (existingTenant) {
+            throw new ConflictException('Email already exists in this tenant');
         }
-        return tenant;
+        const hashedPassword = await bcrypt.hash(createTenantDto.password, 10);
+        const user = this.tenantRepository.create({
+            name: createTenantDto.name,
+            email: createTenantDto.email,
+            password: hashedPassword,
+        });
+        return this.tenantRepository.save(user);
     }
     async findAll() {
         const tenants = await this.tenantRepository.find();

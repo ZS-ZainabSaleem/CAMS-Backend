@@ -17,9 +17,11 @@ export class AuthService {
     // 1. Check if email belongs to a tenant
         const tenant = await this.tenantService.findByEmail(email);
         if (tenant) {
-        
-        return { type: 'tenant', tenant };
-    }
+            const isPasswordValid = await bcrypt.compare(password, tenant.password);
+            if (!isPasswordValid) throw new UnauthorizedException('Invalid tenant credentials');
+
+            return { type: 'tenant', tenant };
+        }
 
     // 2. Else, check if email belongs to a user
         const user = await this.userService.findUserByEmail(email);
@@ -43,6 +45,7 @@ export class AuthService {
         const payload = {
         email: tenant.email,
         sub: tenant.id,
+        role:tenant.role
         };
 
         return {
@@ -65,6 +68,7 @@ export class AuthService {
     const payload = {
         email: user.email,
         sub: user.id,
+        role:user.role
     };
 
     return {

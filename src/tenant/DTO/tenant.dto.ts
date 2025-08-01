@@ -10,7 +10,7 @@ export class CreateTenantDto {
     
     @IsNotEmpty({ message: 'Password is required' })
     password: string;
-
+    
 
 
 }

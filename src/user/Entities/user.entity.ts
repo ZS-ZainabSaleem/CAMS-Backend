@@ -15,6 +15,9 @@ export class userEntity {
     @Column()
     password: string;
 
+    @Column({ default: 'user' }) // constant role
+    role: string;
+    
    @CreateDateColumn()
     createdAt: Date;  
 
