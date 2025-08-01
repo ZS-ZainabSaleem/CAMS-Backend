@@ -14,7 +14,7 @@ export class AuthService {
     ) {}
 
     async validateLogin(email: string, password: string): Promise<any> {
-    // 1. Check if email belongs to a tenant
+    // if email belongs to a tenant
         const tenant = await this.tenantService.findByEmail(email);
         if (tenant) {
             const isPasswordValid = await bcrypt.compare(password, tenant.password);
@@ -23,7 +23,7 @@ export class AuthService {
             return { type: 'tenant', tenant };
         }
 
-    // 2. Else, check if email belongs to a user
+    //if email belongs to a user
         const user = await this.userService.findUserByEmail(email);
         console.log('User found:', user);
         if (!user) throw new UnauthorizedException('Invalid credentials');
@@ -39,7 +39,6 @@ export class AuthService {
     if (result.type === 'tenant') {
         const tenant = result.tenant;
 
-        // Ensure users are loaded
         const tenantWithUsers = await this.tenantService.findTenantWithUsers(tenant.id);
 
         const payload = {
@@ -58,6 +57,7 @@ export class AuthService {
             id: user.id,
             name: user.name,
             email: user.email,
+            role: user.role,
             })),
         },
         };
@@ -78,6 +78,8 @@ export class AuthService {
         data: {
         id: user.id,
         name: user.name,
+        role: user.role,
+        tenantId: user.tenant.id,
         },
     };
     }

@@ -10,6 +10,10 @@ export class UserController {
     async getAllUsers() {
         return await this.userService.findAll();
     }
+    @Get(':id')
+    async getUserById(@Param('id') id: number) {
+        return await this.userService.findById(id);
+    }    
 
     @UseGuards(AuthGuard('jwt'))
     @Post()

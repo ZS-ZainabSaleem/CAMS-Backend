@@ -17,6 +17,13 @@ export class UserService {
         }
         return user;
     }
+    async findById(id: number) {
+        const user = await this.userRepository.findOne({ where: { id }, relations: ['tenant'] });
+        if (!user) {
+            throw new NotFoundException('User not found');
+        }
+        return user;
+    }
     async create(dto: CreateUserDto, tenantId: number) {
     // 2. Check if email already exists in this tenant
     const existingUser = await this.userRepository.findOne({
