@@ -17,11 +17,12 @@ export class UserService {
         }
         return user;
     }
-    async create(dto: CreateUserDto) {
+    async create(dto: CreateUserDto, tenantId: number) {
     // 2. Check if email already exists in this tenant
     const existingUser = await this.userRepository.findOne({
       where: {
         email: dto.email,
+        tenant: { id: tenantId } 
       },
     });
     if (existingUser) {
@@ -33,8 +34,9 @@ export class UserService {
         name: dto.name,
         email: dto.email,
         password: hashedPassword,
-        tenant: { id: dto.tenantId },
+        tenant: { id:tenantId },
     });
+    console.log('User created:', user);
 
     return this.userRepository.save(user);
     }

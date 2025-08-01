@@ -11,9 +11,13 @@ export class UserController {
         return await this.userService.findAll();
     }
 
+    @UseGuards(AuthGuard('jwt'))
     @Post()
-    async createUser(@Body(ValidationPipe) createUserDto: CreateUserDto) {
-        return await this.userService.create(createUserDto); 
+    async createUser(
+    @Body(ValidationPipe) createUserDto: CreateUserDto,@Req() req
+    ) {
+        console.log('Creating user for tenant:', req.user.tenantId);
+    return await this.userService.create(createUserDto, req.user.tenantId);
     }
     @Delete(':id')
     async deleteUser(@Param('id') id: number) {

@@ -19,7 +19,7 @@ export class TenantEntity {
     @Column({ default: 'tenant' }) 
     role: string;
 
-    @Column() 
+    @Column({ type: 'varchar', nullable: true })
     logo: string;
 
     @OneToMany(() => userEntity, user => user.tenant)

@@ -12,8 +12,4 @@ export class CreateUserDto {
     @MinLength(6, { message: 'Password must be at least 6 characters long' })
     password: string;
 
-    @IsNumber({}, { message: 'Tenant ID must be a number' })
-    @IsNotEmpty({ message: 'Tenant ID is required' })
-    tenantId: number; // Optional tenant ID for multi-tenancy support
-
 }
