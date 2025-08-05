@@ -51,13 +51,15 @@ export class AuthService {
         return {
         access_token: this.jwtService.sign(payload),
         data: {
-            tenantId: tenantWithUsers.id,
-            tenantName: tenantWithUsers.name,
+            id: tenantWithUsers.id,
+            name: tenantWithUsers.name,
+            role : 'tenant',
             users: tenantWithUsers.users.map((user) => ({
             id: user.id,
             name: user.name,
             email: user.email,
             role: user.role,
+
             })),
         },
         };
